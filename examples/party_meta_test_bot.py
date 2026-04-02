@@ -15,17 +15,58 @@ Commands
 !outfit <CID>
     Set the bot's outfit (character). Example: ``!outfit CID_028_Athena_Commando_F``
 
+!outfitvariant <CID> <channel> <value>
+    Set the bot's outfit with a single variant channel. ``channel`` is one of:
+    pattern, numeric, clothing_color, jersey_color, parts, progressive,
+    particle, material, emissive, profile_banner. Integer channels accept an
+    int value; jersey_color/profile_banner accept a string.
+    Example: ``!outfitvariant CID_028_Athena_Commando_F material 3``
+
+!outfitenlight <CID> <season> <level>
+    Set the bot's outfit with an enlightenment. ``season`` is the Chapter 2
+    season number (1-based) and ``level`` is the unlocked level for that
+    season. Example: ``!outfitenlight CID_028_Athena_Commando_F 1 300``
+
+!outfitcorrupt <CID> <corruption>
+    Set the bot's outfit with a corruption value (float 0.0–100.0).
+    The library automatically prepends the required corruption variant.
+    Example: ``!outfitcorrupt CID_028_Athena_Commando_F 50.0``
+
 !backpack <BID>
     Set the bot's back bling. Example: ``!backpack BID_001``
+
+!backpackvariant <BID> <channel> <value>
+    Set the bot's back bling with a single variant channel.
+    Example: ``!backpackvariant BID_001 material 2``
+
+!backpackenlight <BID> <season> <level>
+    Set the bot's back bling with an enlightenment.
+    Example: ``!backpackenlight BID_001 1 300``
+
+!backpackcorrupt <BID> <corruption>
+    Set the bot's back bling with a corruption value.
+    Example: ``!backpackcorrupt BID_001 25.0``
 
 !pickaxe <PID>
     Set the bot's pickaxe. Example: ``!pickaxe DefaultPickaxe``
 
+!pickaxevariant <PID> <channel> <value>
+    Set the bot's pickaxe with a single variant channel.
+    Example: ``!pickaxevariant DefaultPickaxe material 1``
+
 !contrail <ID>
     Set the bot's contrail. Example: ``!contrail DefaultContrail``
 
+!contrailvariant <ID> <channel> <value>
+    Set the bot's contrail with a single variant channel.
+    Example: ``!contrailvariant DefaultContrail material 2``
+
 !kicks <ID>
     Set the bot's kicks (shoes). Example: ``!kicks KID_001``
+
+!kicksvariant <ID> <channel> <value>
+    Set the bot's kicks with a single variant channel.
+    Example: ``!kicksvariant KID_001 material 1``
 
 !banner <icon> <color>
     Set the bot's banner icon and color (season level removed in new meta).
@@ -138,6 +179,14 @@ def _me():
 # Cosmetic setter commands
 # ---------------------------------------------------------------------------
 
+def _parse_variant_value(raw: str):
+    """Return *raw* as an int when possible, otherwise as a str."""
+    try:
+        return int(raw)
+    except ValueError:
+        return raw
+
+
 @bot.command()
 async def outfit(ctx, asset: str):
     """Set the bot's outfit. Usage: !outfit <CID>"""
@@ -146,6 +195,48 @@ async def outfit(ctx, asset: str):
         return await ctx.send('Not in a party.')
     await me.set_outfit(asset)
     await ctx.send(f'Outfit set to: {asset}')
+
+
+@bot.command()
+async def outfitvariant(ctx, asset: str, channel: str, value: str):
+    """Set the bot's outfit with one variant channel.
+    Usage: !outfitvariant <CID> <channel> <value>
+    Example: !outfitvariant CID_028_Athena_Commando_F material 3
+    """
+    me = _me()
+    if me is None:
+        return await ctx.send('Not in a party.')
+    variants = me.create_variant(**{channel: _parse_variant_value(value)})
+    await me.set_outfit(asset, variants=variants)
+    await ctx.send(f'Outfit set to: {asset} with variant {channel}={value}')
+
+
+@bot.command()
+async def outfitenlight(ctx, asset: str, season: int, level: int):
+    """Set the bot's outfit with enlightenment.
+    Usage: !outfitenlight <CID> <season> <level>
+    Example: !outfitenlight CID_028_Athena_Commando_F 1 300
+    """
+    me = _me()
+    if me is None:
+        return await ctx.send('Not in a party.')
+    await me.set_outfit(asset, enlightenment=(season, level))
+    await ctx.send(
+        f'Outfit set to: {asset} with enlightenment season={season} level={level}'
+    )
+
+
+@bot.command()
+async def outfitcorrupt(ctx, asset: str, corruption: float):
+    """Set the bot's outfit with a corruption value.
+    Usage: !outfitcorrupt <CID> <corruption>
+    Example: !outfitcorrupt CID_028_Athena_Commando_F 50.0
+    """
+    me = _me()
+    if me is None:
+        return await ctx.send('Not in a party.')
+    await me.set_outfit(asset, corruption=corruption)
+    await ctx.send(f'Outfit set to: {asset} with corruption={corruption}')
 
 
 @bot.command()
@@ -159,6 +250,48 @@ async def backpack(ctx, asset: str):
 
 
 @bot.command()
+async def backpackvariant(ctx, asset: str, channel: str, value: str):
+    """Set the bot's back bling with one variant channel.
+    Usage: !backpackvariant <BID> <channel> <value>
+    Example: !backpackvariant BID_001 material 2
+    """
+    me = _me()
+    if me is None:
+        return await ctx.send('Not in a party.')
+    variants = me.create_variant(**{channel: _parse_variant_value(value)})
+    await me.set_backpack(asset, variants=variants)
+    await ctx.send(f'Backpack set to: {asset} with variant {channel}={value}')
+
+
+@bot.command()
+async def backpackenlight(ctx, asset: str, season: int, level: int):
+    """Set the bot's back bling with enlightenment.
+    Usage: !backpackenlight <BID> <season> <level>
+    Example: !backpackenlight BID_001 1 300
+    """
+    me = _me()
+    if me is None:
+        return await ctx.send('Not in a party.')
+    await me.set_backpack(asset, enlightenment=(season, level))
+    await ctx.send(
+        f'Backpack set to: {asset} with enlightenment season={season} level={level}'
+    )
+
+
+@bot.command()
+async def backpackcorrupt(ctx, asset: str, corruption: float):
+    """Set the bot's back bling with a corruption value.
+    Usage: !backpackcorrupt <BID> <corruption>
+    Example: !backpackcorrupt BID_001 25.0
+    """
+    me = _me()
+    if me is None:
+        return await ctx.send('Not in a party.')
+    await me.set_backpack(asset, corruption=corruption)
+    await ctx.send(f'Backpack set to: {asset} with corruption={corruption}')
+
+
+@bot.command()
 async def pickaxe(ctx, asset: str):
     """Set the bot's pickaxe. Usage: !pickaxe <PID>"""
     me = _me()
@@ -166,6 +299,20 @@ async def pickaxe(ctx, asset: str):
         return await ctx.send('Not in a party.')
     await me.set_pickaxe(asset)
     await ctx.send(f'Pickaxe set to: {asset}')
+
+
+@bot.command()
+async def pickaxevariant(ctx, asset: str, channel: str, value: str):
+    """Set the bot's pickaxe with one variant channel.
+    Usage: !pickaxevariant <PID> <channel> <value>
+    Example: !pickaxevariant DefaultPickaxe material 1
+    """
+    me = _me()
+    if me is None:
+        return await ctx.send('Not in a party.')
+    variants = me.create_variant(**{channel: _parse_variant_value(value)})
+    await me.set_pickaxe(asset, variants=variants)
+    await ctx.send(f'Pickaxe set to: {asset} with variant {channel}={value}')
 
 
 @bot.command()
@@ -179,6 +326,20 @@ async def contrail(ctx, asset: str):
 
 
 @bot.command()
+async def contrailvariant(ctx, asset: str, channel: str, value: str):
+    """Set the bot's contrail with one variant channel.
+    Usage: !contrailvariant <ID> <channel> <value>
+    Example: !contrailvariant DefaultContrail material 2
+    """
+    me = _me()
+    if me is None:
+        return await ctx.send('Not in a party.')
+    variants = me.create_variant(**{channel: _parse_variant_value(value)})
+    await me.set_contrail(asset, variants=variants)
+    await ctx.send(f'Contrail set to: {asset} with variant {channel}={value}')
+
+
+@bot.command()
 async def kicks(ctx, asset: str):
     """Set the bot's kicks (shoes). Usage: !kicks <ID>"""
     me = _me()
@@ -186,6 +347,20 @@ async def kicks(ctx, asset: str):
         return await ctx.send('Not in a party.')
     await me.set_kicks(asset)
     await ctx.send(f'Kicks set to: {asset}')
+
+
+@bot.command()
+async def kicksvariant(ctx, asset: str, channel: str, value: str):
+    """Set the bot's kicks with one variant channel.
+    Usage: !kicksvariant <ID> <channel> <value>
+    Example: !kicksvariant KID_001 material 1
+    """
+    me = _me()
+    if me is None:
+        return await ctx.send('Not in a party.')
+    variants = me.create_variant(**{channel: _parse_variant_value(value)})
+    await me.set_kicks(asset, variants=variants)
+    await ctx.send(f'Kicks set to: {asset} with variant {channel}={value}')
 
 
 # ---------------------------------------------------------------------------
