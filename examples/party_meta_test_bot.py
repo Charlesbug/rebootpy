@@ -15,12 +15,11 @@ Commands
 !outfit <CID>
     Set the bot's outfit (character). Example: ``!outfit CID_028_Athena_Commando_F``
 
-!outfitvariant <CID> <channel> <value>
-    Set the bot's outfit with a single variant channel. ``channel`` is one of:
-    pattern, numeric, clothing_color, jersey_color, parts, progressive,
-    particle, material, emissive, profile_banner. Integer channels accept an
-    int value; jersey_color/profile_banner accept a string.
-    Example: ``!outfitvariant CID_028_Athena_Commando_F material 3``
+!outfitvariant <CID> <variant> [variant ...]
+    Set the bot's outfit with one or more raw variant strings. Variants are the
+    plain string tokens stored in the MpLoadout (e.g. ``Mat3``, ``Stage2``).
+    Example: ``!outfitvariant CID_028_Athena_Commando_F Mat3``
+    Example: ``!outfitvariant CID_028_Athena_Commando_F Mat1 Stage2``
 
 !outfitenlight <CID> <season> <level>
     Set the bot's outfit with an enlightenment. ``season`` is the Chapter 2
@@ -35,9 +34,9 @@ Commands
 !backpack <BID>
     Set the bot's back bling. Example: ``!backpack BID_001``
 
-!backpackvariant <BID> <channel> <value>
-    Set the bot's back bling with a single variant channel.
-    Example: ``!backpackvariant BID_001 material 2``
+!backpackvariant <BID> <variant> [variant ...]
+    Set the bot's back bling with one or more raw variant strings.
+    Example: ``!backpackvariant BID_001 Mat2``
 
 !backpackenlight <BID> <season> <level>
     Set the bot's back bling with an enlightenment.
@@ -50,23 +49,23 @@ Commands
 !pickaxe <PID>
     Set the bot's pickaxe. Example: ``!pickaxe DefaultPickaxe``
 
-!pickaxevariant <PID> <channel> <value>
-    Set the bot's pickaxe with a single variant channel.
-    Example: ``!pickaxevariant DefaultPickaxe material 1``
+!pickaxevariant <PID> <variant> [variant ...]
+    Set the bot's pickaxe with one or more raw variant strings.
+    Example: ``!pickaxevariant DefaultPickaxe Mat1``
 
 !contrail <ID>
     Set the bot's contrail. Example: ``!contrail DefaultContrail``
 
-!contrailvariant <ID> <channel> <value>
-    Set the bot's contrail with a single variant channel.
-    Example: ``!contrailvariant DefaultContrail material 2``
+!contrailvariant <ID> <variant> [variant ...]
+    Set the bot's contrail with one or more raw variant strings.
+    Example: ``!contrailvariant DefaultContrail Mat2``
 
 !kicks <ID>
     Set the bot's kicks (shoes). Example: ``!kicks KID_001``
 
-!kicksvariant <ID> <channel> <value>
-    Set the bot's kicks with a single variant channel.
-    Example: ``!kicksvariant KID_001 material 1``
+!kicksvariant <ID> <variant> [variant ...]
+    Set the bot's kicks with one or more raw variant strings.
+    Example: ``!kicksvariant KID_001 Mat1``
 
 !banner <icon> <color>
     Set the bot's banner icon and color (season level removed in new meta).
@@ -179,14 +178,6 @@ def _me():
 # Cosmetic setter commands
 # ---------------------------------------------------------------------------
 
-def _parse_variant_value(raw: str):
-    """Return *raw* as an int when possible, otherwise as a str."""
-    try:
-        return int(raw)
-    except ValueError:
-        return raw
-
-
 @bot.command()
 async def outfit(ctx, asset: str):
     """Set the bot's outfit. Usage: !outfit <CID>"""
@@ -198,17 +189,16 @@ async def outfit(ctx, asset: str):
 
 
 @bot.command()
-async def outfitvariant(ctx, asset: str, channel: str, value: str):
-    """Set the bot's outfit with one variant channel.
-    Usage: !outfitvariant <CID> <channel> <value>
-    Example: !outfitvariant CID_028_Athena_Commando_F material 3
+async def outfitvariant(ctx, asset: str, *variants: str):
+    """Set the bot's outfit with raw variant strings.
+    Usage: !outfitvariant <CID> <variant> [variant ...]
+    Example: !outfitvariant CID_028_Athena_Commando_F Mat3
     """
     me = _me()
     if me is None:
         return await ctx.send('Not in a party.')
-    variants = me.create_variant(**{channel: _parse_variant_value(value)})
-    await me.set_outfit(asset, variants=variants)
-    await ctx.send(f'Outfit set to: {asset} with variant {channel}={value}')
+    await me.set_outfit(asset, variants=list(variants))
+    await ctx.send(f'Outfit set to: {asset} with variants: {", ".join(variants)}')
 
 
 @bot.command()
@@ -250,17 +240,16 @@ async def backpack(ctx, asset: str):
 
 
 @bot.command()
-async def backpackvariant(ctx, asset: str, channel: str, value: str):
-    """Set the bot's back bling with one variant channel.
-    Usage: !backpackvariant <BID> <channel> <value>
-    Example: !backpackvariant BID_001 material 2
+async def backpackvariant(ctx, asset: str, *variants: str):
+    """Set the bot's back bling with raw variant strings.
+    Usage: !backpackvariant <BID> <variant> [variant ...]
+    Example: !backpackvariant BID_001 Mat2
     """
     me = _me()
     if me is None:
         return await ctx.send('Not in a party.')
-    variants = me.create_variant(**{channel: _parse_variant_value(value)})
-    await me.set_backpack(asset, variants=variants)
-    await ctx.send(f'Backpack set to: {asset} with variant {channel}={value}')
+    await me.set_backpack(asset, variants=list(variants))
+    await ctx.send(f'Backpack set to: {asset} with variants: {", ".join(variants)}')
 
 
 @bot.command()
@@ -302,17 +291,16 @@ async def pickaxe(ctx, asset: str):
 
 
 @bot.command()
-async def pickaxevariant(ctx, asset: str, channel: str, value: str):
-    """Set the bot's pickaxe with one variant channel.
-    Usage: !pickaxevariant <PID> <channel> <value>
-    Example: !pickaxevariant DefaultPickaxe material 1
+async def pickaxevariant(ctx, asset: str, *variants: str):
+    """Set the bot's pickaxe with raw variant strings.
+    Usage: !pickaxevariant <PID> <variant> [variant ...]
+    Example: !pickaxevariant DefaultPickaxe Mat1
     """
     me = _me()
     if me is None:
         return await ctx.send('Not in a party.')
-    variants = me.create_variant(**{channel: _parse_variant_value(value)})
-    await me.set_pickaxe(asset, variants=variants)
-    await ctx.send(f'Pickaxe set to: {asset} with variant {channel}={value}')
+    await me.set_pickaxe(asset, variants=list(variants))
+    await ctx.send(f'Pickaxe set to: {asset} with variants: {", ".join(variants)}')
 
 
 @bot.command()
@@ -326,17 +314,16 @@ async def contrail(ctx, asset: str):
 
 
 @bot.command()
-async def contrailvariant(ctx, asset: str, channel: str, value: str):
-    """Set the bot's contrail with one variant channel.
-    Usage: !contrailvariant <ID> <channel> <value>
-    Example: !contrailvariant DefaultContrail material 2
+async def contrailvariant(ctx, asset: str, *variants: str):
+    """Set the bot's contrail with raw variant strings.
+    Usage: !contrailvariant <ID> <variant> [variant ...]
+    Example: !contrailvariant DefaultContrail Mat2
     """
     me = _me()
     if me is None:
         return await ctx.send('Not in a party.')
-    variants = me.create_variant(**{channel: _parse_variant_value(value)})
-    await me.set_contrail(asset, variants=variants)
-    await ctx.send(f'Contrail set to: {asset} with variant {channel}={value}')
+    await me.set_contrail(asset, variants=list(variants))
+    await ctx.send(f'Contrail set to: {asset} with variants: {", ".join(variants)}')
 
 
 @bot.command()
@@ -350,17 +337,16 @@ async def kicks(ctx, asset: str):
 
 
 @bot.command()
-async def kicksvariant(ctx, asset: str, channel: str, value: str):
-    """Set the bot's kicks with one variant channel.
-    Usage: !kicksvariant <ID> <channel> <value>
-    Example: !kicksvariant KID_001 material 1
+async def kicksvariant(ctx, asset: str, *variants: str):
+    """Set the bot's kicks with raw variant strings.
+    Usage: !kicksvariant <ID> <variant> [variant ...]
+    Example: !kicksvariant KID_001 Mat1
     """
     me = _me()
     if me is None:
         return await ctx.send('Not in a party.')
-    variants = me.create_variant(**{channel: _parse_variant_value(value)})
-    await me.set_kicks(asset, variants=variants)
-    await ctx.send(f'Kicks set to: {asset} with variant {channel}={value}')
+    await me.set_kicks(asset, variants=list(variants))
+    await ctx.send(f'Kicks set to: {asset} with variants: {", ".join(variants)}')
 
 
 # ---------------------------------------------------------------------------
